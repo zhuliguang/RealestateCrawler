@@ -62,7 +62,8 @@ if __name__ == '__main__':
         file_name = 'Victoria.xlsx'
         postcode = readPostcode(file_name)
         urls = createUrl(postcode)
-        r=requests.get(urls[0])
+        #r=requests.get(urls[0])
+        r=requests.get('https://www.realestate.com.au//sold/property-apartment-vic-melbourne-128165818')
         print(r.text)
         if len(re.findall('of \d+ total results',r.text)) != 0:        
             re1 = re.findall('of \d+ total results',r.text)[0]
