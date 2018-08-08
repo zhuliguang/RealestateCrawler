@@ -1,20 +1,33 @@
-import pandas as pd
+'''
+Description: Grab sold house data from realestate.com.au
+Author: Nan Li
+Contact: linan.lqq0@gmail.com
+'''
+
+# import packages
 import os
-import requests
 import re
+import requests
+import pandas as pd
 
-os.chdir(os.path.dirname(__file__))
-path = 'SydneyPostCode_url.xlsx'
-df = pd.read_excel(path)
-df.head()
 
-def readlist(path):
-    import pandas as pd
-    rg = pd.read_excel(path)
-    url=[]
-    for i in range(0,len(rg)):
-        url.append(rg.loc[i]['url'])
-    return url
+url_pre = 'https://www.realestate.com.au/sold/in-'
+url_end = '/list-1?includeSurrounding=false'
+
+
+def readPostcode(file_name):
+    os.chdir(os.path.dirname(__file__))
+    postcode = pd.read_excel(file_name).sort_values(by=['Suburb','Postcode'])
+    postcode = postcode.values
+    postcode = set(postcode[:,0].tolist())
+    return postcode
+
+def createUrl(postcode):
+    urls=[]
+    for _ in postcode:
+        url = '{}{}{}'.format(url_pre,_,url_end)
+        urls.append(url)
+    return urls
  
 def sendrequest(url):
     supply = []
@@ -46,12 +59,11 @@ def exportfile(supply):
  
 if __name__ == '__main__':
     try:
-        path = 'SydneyPostCode_url.xlsx'
-        urls = readlist(path)
-        #print(urls[0],'------',urls[-1])
-        #supplyamount =sendrequest(urls)
+        file_name = 'Victoria.xlsx'
+        postcode = readPostcode(file_name)
+        urls = createUrl(postcode)
         r=requests.get(urls[0])
-        print(r)
+        print(r.text)
         if len(re.findall('of \d+ total results',r.text)) != 0:        
             re1 = re.findall('of \d+ total results',r.text)[0]
             re2 = re.findall('\d+',re1)[0]
