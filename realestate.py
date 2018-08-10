@@ -36,9 +36,14 @@ if __name__ == '__main__':
     postcode = readPostcode(file_name)
     url = createUrl(postcode[0], 1)
     list_page = requests.get(url).text
-    soup = BeautifulSoup(list_page, 'html.parser')
-    for house_link in soup.findAll('a', attrs={'href': re.compile
+    list_soup = BeautifulSoup(list_page, 'html.parser')
+    for house_link in list_soup.findAll('a', attrs={'href': re.compile
                         (r'/sold/property-\S+-vic-\S+[0-9]')}):
         house_url = 'https://www.realestate.com.au' + house_link.get('href')
         house_page = requests.get(house_url).text
-        
+        house_soup = BeautifulSoup(house_page, 'html.parser')
+        address = house_soup.find('span', attrs={'class':'property-info-address__street'}).text
+        suburb = house_soup.find('span', attrs={'class':'property-info-address__suburb'}).text
+        housetype = house_soup.find('span', attrs={'class':'property-info__property-type'}).text
+        bedroom = house_soup.find('li', attrs={'class':'general-features__feature'}).get('aria-label')
+        print(bedroom)
