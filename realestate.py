@@ -55,7 +55,7 @@ if __name__ == '__main__':
             parking INTEGER,
             sold_price INTEGER,
             sold_date DATE,
-            agent_name VARCHAR(50),
+            agency VARCHAR(50),
             link VARCHAR(200) ) """
         cursor = con.cursor()
         cursor.execute(sql)
@@ -70,13 +70,23 @@ if __name__ == '__main__':
         page = 1
         while True:
             url = createUrl(postcode, page)
-            list_page = requests.get(url).text
+            while True:
+                try:
+                    list_page = requests.get(url).text
+                    break
+                except:
+                    continue
             list_soup = BeautifulSoup(list_page, 'html.parser')
             nextpage = list_soup.find('a', attrs={'title':'Go to Next Page'})
             for house_link in list_soup.findAll('a', attrs={'href': re.compile
                                 (r'/sold/property-\S+-vic-\S+[0-9]')}):
                 house_url = 'https://www.realestate.com.au' + house_link.get('href')
-                house_page = requests.get(house_url).text
+                while True:
+                    try:
+                        house_page = requests.get(house_url).text
+                        break
+                    except:
+                        continue
                 house_soup = BeautifulSoup(house_page, 'html.parser')
                 house_id = house_soup.find('span', attrs={'class':'listing-metrics__property-id'})
                 if house_id is not None:
@@ -109,14 +119,18 @@ if __name__ == '__main__':
                 solddate = house_soup.find('p', attrs={'class':'property-info__secondary-content'})
                 if solddate is not None:
                     solddate = solddate.text[8:]
-                    solddate = datetime.strptime(solddate, '%d %b %Y')
+                    try:
+                        solddate = datetime.strptime(solddate, '%d %b %Y')
+                    except:
+                        print(address, solddate)
+                        solddate = None
                 agent = house_soup.find('p', attrs={'class':'agency-info__name'})
                 if agent is not None:
                     agent = agent.text
                 # save to mySQL database
                 sql = """INSERT INTO house_info_main (
                     house_id, address, suburb, postcode, house_type, bedroom, bathroom,
-                    parking, sold_price, sold_date, agent_name, link) 
+                    parking, sold_price, sold_date, agency, link) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                 val = (house_id, address, suburb, post_code, housetype, bedroom, bathroom,
                     parking, soldprice,solddate,agent,house_url)
