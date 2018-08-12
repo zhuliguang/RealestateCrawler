@@ -7,6 +7,7 @@ Contact: linan.lqq0@gmail.com
 # import packages
 import os
 import re
+import time
 import requests
 import pandas as pd
 import mysql.connector
@@ -77,6 +78,7 @@ if __name__ == '__main__':
                     list_page = requests.get(url).text
                     break
                 except:
+                    time.sleep(5)
                     continue
             list_soup = BeautifulSoup(list_page, 'html.parser')
             nextpage = list_soup.find('a', attrs={'title':'Go to Next Page'})
@@ -88,6 +90,7 @@ if __name__ == '__main__':
                         house_page = requests.get(house_url).text
                         break
                     except:
+                        time.sleep(5)
                         continue
                 house_soup = BeautifulSoup(house_page, 'html.parser')
                 house_id = house_soup.find('span', attrs={'class':'listing-metrics__property-id'})
