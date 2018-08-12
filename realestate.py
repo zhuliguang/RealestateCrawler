@@ -49,7 +49,7 @@ if __name__ == '__main__':
             address VARCHAR(100),
             suburb VARCHAR(50),
             postcode INTEGER,
-            house_type VARCHAR(15),
+            house_type VARCHAR(16),
             bedroom INTEGER,
             bathroom INTEGER,
             parking INTEGER,
@@ -94,7 +94,7 @@ if __name__ == '__main__':
                 try:
                     address = house_soup.find('span', attrs={'class':'property-info-address__street'}).text
                     suburb_temp = house_soup.find('span', attrs={'class':'property-info-address__suburb'}).text
-                    suburb = re.search(r'[a-z|A-Z]+,', suburb_temp).group()[:-1]
+                    suburb = re.search(r'[a-z|A-Z|\s]+,', suburb_temp).group()[:-1]
                     post_code = re.search(r'[0-9]+', suburb_temp).group()
                     housetype = house_soup.find('span', attrs={'class':'property-info__property-type'}).text
                     bedroom = 0
