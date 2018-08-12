@@ -49,13 +49,15 @@ if __name__ == '__main__':
             address VARCHAR(100),
             suburb VARCHAR(50),
             postcode INTEGER,
-            house_type VARCHAR(16),
+            house_type VARCHAR(20),
             bedroom INTEGER,
             bathroom INTEGER,
             parking INTEGER,
             sold_price INTEGER,
             sold_date DATE,
             agency VARCHAR(100),
+            latitude DOUBLE PRECISION,
+            longitude DOUBLE PRECISION,
             link VARCHAR(200) ) """
         cursor = con.cursor()
         cursor.execute(sql)
@@ -127,13 +129,19 @@ if __name__ == '__main__':
                     agent = house_soup.find('p', attrs={'class':'agency-info__name'})
                     if agent is not None:
                         agent = agent.text
+                    latitude = re.search(r'"latitude":-[0-9|.]+', house_page)
+                    if latitude is not None:
+                        latitude = -float(re.search(r'[0-9|.]+', latitude.group()).group())
+                    longitude = re.search(r'"longitude":[0-9|.]+', house_page)
+                    if longitude is not None:
+                        longitude = float(re.search(r'[0-9|.]+', longitude.group()).group())
                     # save to mySQL database
                     sql = """INSERT INTO house_info_main (
                         house_id, address, suburb, postcode, house_type, bedroom, bathroom,
-                        parking, sold_price, sold_date, agency, link) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                        parking, sold_price, sold_date, agency, latitude, longitude, link) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     val = (house_id, address, suburb, post_code, housetype, bedroom, bathroom,
-                        parking, soldprice, solddate, agent, house_url)
+                        parking, soldprice, solddate, agent, latitude, longitude, house_url)
                     cursor.execute(sql, val)
                     con.commit()
                     house_count = house_count + 1
