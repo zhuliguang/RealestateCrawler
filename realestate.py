@@ -1,5 +1,5 @@
 '''
-Description: Grab sold house data from realestate.com.au
+Description: Scrape sold house data from realestate.com.au
 Author: Nan Li
 Contact: linan.lqq0@gmail.com
 '''
@@ -24,7 +24,7 @@ def readPostcode(file_name):
 
 def createUrl(postcode, page_no):
     url_pre = 'https://www.realestate.com.au/sold/in-'
-    url = '{}{}/list-{}'.format(url_pre, postcode, page_no)
+    url = '{}{}/list-{}?includeSurrounding=false'.format(url_pre, postcode, page_no)
     return url
 
  
@@ -49,13 +49,13 @@ if __name__ == '__main__':
             address VARCHAR(100),
             suburb VARCHAR(50),
             postcode INTEGER,
-            house_type VARCHAR(10),
+            house_type VARCHAR(15),
             bedroom INTEGER,
             bathroom INTEGER,
             parking INTEGER,
             sold_price INTEGER,
             sold_date DATE,
-            agency VARCHAR(50),
+            agency VARCHAR(100),
             link VARCHAR(200) ) """
         cursor = con.cursor()
         cursor.execute(sql)
@@ -96,6 +96,8 @@ if __name__ == '__main__':
                 suburb = re.search(r'[a-z|A-Z]+,', suburb_temp).group()[:-1]
                 post_code = re.search(r'[0-9]+', suburb_temp).group()
                 housetype = house_soup.find('span', attrs={'class':'property-info__property-type'}).text
+                if len(housetype)>15:
+                    continue
                 bedroom = 0
                 bathroom = 0
                 parking = 0
@@ -122,7 +124,6 @@ if __name__ == '__main__':
                     try:
                         solddate = datetime.strptime(solddate, '%d %b %Y')
                     except:
-                        print(address, solddate)
                         solddate = None
                 agent = house_soup.find('p', attrs={'class':'agency-info__name'})
                 if agent is not None:
