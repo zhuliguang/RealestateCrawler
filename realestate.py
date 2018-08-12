@@ -91,54 +91,57 @@ if __name__ == '__main__':
                 house_id = house_soup.find('span', attrs={'class':'listing-metrics__property-id'})
                 if house_id is not None:
                     house_id = int(re.search(r'[0-9]+', house_id.text).group())
-                address = house_soup.find('span', attrs={'class':'property-info-address__street'}).text
-                suburb_temp = house_soup.find('span', attrs={'class':'property-info-address__suburb'}).text
-                suburb = re.search(r'[a-z|A-Z]+,', suburb_temp).group()[:-1]
-                post_code = re.search(r'[0-9]+', suburb_temp).group()
-                housetype = house_soup.find('span', attrs={'class':'property-info__property-type'}).text
-                if len(housetype)>15:
+                try:
+                    address = house_soup.find('span', attrs={'class':'property-info-address__street'}).text
+                    suburb_temp = house_soup.find('span', attrs={'class':'property-info-address__suburb'}).text
+                    suburb = re.search(r'[a-z|A-Z]+,', suburb_temp).group()[:-1]
+                    post_code = re.search(r'[0-9]+', suburb_temp).group()
+                    housetype = house_soup.find('span', attrs={'class':'property-info__property-type'}).text
+                    bedroom = 0
+                    bathroom = 0
+                    parking = 0
+                    feature_str = ''
+                    for feature in house_soup.findAll('li', attrs={'class':'general-features__feature'}):
+                        feature_str = feature_str + feature.get('aria-label')
+                    bed = re.search(r'[0-9]+\sbedroom', feature_str)
+                    if bed is not None:
+                        bedroom = int(re.search(r'[0-9]+', bed.group()).group())
+                    bath = re.search(r'[0-9]+\sbathroom', feature_str)
+                    if bath is not None:
+                        bathroom = int(re.search(r'[0-9]+', bath.group()).group())
+                    park = re.search(r'[0-9]+\sparking space', feature_str)
+                    if park is not None:
+                        parking = int(re.search(r'[0-9]+', park.group()).group())
+                    soldprice = None
+                    soldprice_str = house_soup.find('span', attrs={'class':'property-price property-info__price'}).text
+                    price = re.search(r'[0-9,]+', soldprice_str)
+                    if price is not None:
+                        soldprice = int(price.group().replace(',', ''))
+                    solddate = house_soup.find('p', attrs={'class':'property-info__secondary-content'})
+                    if solddate is not None:
+                        solddate = solddate.text[8:]
+                        try:
+                            solddate = datetime.strptime(solddate, '%d %b %Y')
+                        except:
+                            solddate = None
+                    agent = house_soup.find('p', attrs={'class':'agency-info__name'})
+                    if agent is not None:
+                        agent = agent.text
+                    # save to mySQL database
+                    sql = """INSERT INTO house_info_main (
+                        house_id, address, suburb, postcode, house_type, bedroom, bathroom,
+                        parking, sold_price, sold_date, agency, link) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    val = (house_id, address, suburb, post_code, housetype, bedroom, bathroom,
+                        parking, soldprice, solddate, agent, house_url)
+                    cursor.execute(sql, val)
+                    con.commit()
+                    house_count = house_count + 1
+                    print(house_count)
+                except:
+                    file = open('url_with_problem.log', 'a')
+                    file.write(house_url + '\n')
                     continue
-                bedroom = 0
-                bathroom = 0
-                parking = 0
-                feature_str = ''
-                for feature in house_soup.findAll('li', attrs={'class':'general-features__feature'}):
-                    feature_str = feature_str + feature.get('aria-label')
-                bed = re.search(r'[0-9]+\sbedroom', feature_str)
-                if bed is not None:
-                    bedroom = int(re.search(r'[0-9]+', bed.group()).group())
-                bath = re.search(r'[0-9]+\sbathroom', feature_str)
-                if bath is not None:
-                    bathroom = int(re.search(r'[0-9]+', bath.group()).group())
-                park = re.search(r'[0-9]+\sparking space', feature_str)
-                if park is not None:
-                    parking = int(re.search(r'[0-9]+', park.group()).group())
-                soldprice = None
-                soldprice_str = house_soup.find('span', attrs={'class':'property-price property-info__price'}).text
-                price = re.search(r'[0-9,]+', soldprice_str)
-                if price is not None:
-                    soldprice = int(price.group().replace(',', ''))
-                solddate = house_soup.find('p', attrs={'class':'property-info__secondary-content'})
-                if solddate is not None:
-                    solddate = solddate.text[8:]
-                    try:
-                        solddate = datetime.strptime(solddate, '%d %b %Y')
-                    except:
-                        solddate = None
-                agent = house_soup.find('p', attrs={'class':'agency-info__name'})
-                if agent is not None:
-                    agent = agent.text
-                # save to mySQL database
-                sql = """INSERT INTO house_info_main (
-                    house_id, address, suburb, postcode, house_type, bedroom, bathroom,
-                    parking, sold_price, sold_date, agency, link) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                val = (house_id, address, suburb, post_code, housetype, bedroom, bathroom,
-                    parking, soldprice,solddate,agent,house_url)
-                cursor.execute(sql, val)
-                con.commit()
-                house_count = house_count + 1
-                print(house_count)
             if nextpage is not None:
                 page = page + 1
             else:
