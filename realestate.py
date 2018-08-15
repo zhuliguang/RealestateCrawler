@@ -43,7 +43,7 @@ class ExtractListPage(Request):
         return nextpage
     
     def getHouseLink(self):
-        houselinks = self.soup.findAll('a', attrs={'href': re.compile(r'/sold/property-\S+-vic-\S+[0-9]')})
+        houselinks = self.soup.findAll('a', attrs={'href': re.compile(r'/sold/property-\S+-[a-z|-]+-[0-9]')})
         return houselinks
 
 # class to get house infos from house page
@@ -119,7 +119,7 @@ class House(Request):
             longitude = float(re.search(r'[0-9|.]+', longitude.group()).group())
         return latitude, longitude
 
-if __name__ == '__main__':
+def main(state):
     # connect mySQL database
     try:
         con=mysql.connector.connect(user='root',password='asdfghjkl;\'',database='aus_sold_houses')
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         exit()
     # create table if not exist
     try:
-        sql = """ CREATE TABLE victoria_test (
+        sql = """ CREATE TABLE {} (
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             house_id INTEGER UNIQUE,
             address VARCHAR(100),
@@ -150,7 +150,7 @@ if __name__ == '__main__':
             latitude DOUBLE PRECISION,
             longitude DOUBLE PRECISION,
             link VARCHAR(200),
-            time TIMESTAMP ) """
+            time TIMESTAMP ) """.format(state)
         cursor = con.cursor()
         cursor.execute(sql)
         print('create table successfully!')
@@ -160,7 +160,7 @@ if __name__ == '__main__':
 
     # scrape data according to postcode
     house_count = 0
-    file_name = 'Victoria.xlsx'
+    file_name = '{}.xlsx'.format(state)
     postcodes = readPostcode(file_name)
     for postcode in postcodes:
         print(postcode)
@@ -197,19 +197,20 @@ if __name__ == '__main__':
                     agency = house.getAgency()
                     latitude, longitude = house.getLocation()
                     # save to mySQL database
-                    sql = """INSERT INTO victoria_test (
+                    sql = """INSERT INTO {} (
                         house_id, address, suburb, postcode, house_type, bedroom, bathroom,
                         parking, sold_price, sold_date, agency, latitude, longitude, link, time) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())"""
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())""".format(state)
                     val = (house_id, address, suburb, post_code, housetype, bedroom, bathroom,
                         parking, soldprice, solddate, agency, latitude, longitude, house_url)
                     cursor.execute(sql, val)
                     con.commit()
                     house_count = house_count + 1
-                    print(house_count)
+                    print(house_count, datetime.now())
                 except:
                     file = open('url_with_problem.log', 'a')
                     file.write(house_url + '\n')
+                    print('error', datetime.now())
                     continue
             if nextpage is not None:
                 page = page + 1
@@ -217,3 +218,7 @@ if __name__ == '__main__':
                 break
     con.close()
     print('Mission completed!!!')
+
+if __name__ == '__main__':
+    #main('victoria')
+    main('new_south_wales')
