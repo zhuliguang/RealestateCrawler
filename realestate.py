@@ -32,8 +32,19 @@ def createUrl(postcode, page_no):
 # class to send request to web server
 class Request:
     def __init__(self, url):
+        self.header = {'Accept-Charset': 'utf-8', 'Accept': 'text/css,*/*;q=0.1',
+                           'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.2) AppleWebKit/525.13 (KHTML, like Gecko) Version/3.1 Safari/525.13'}
         self.url = url
-        self.text = requests.get(self.url).text
+        req = requests.Request(method='GET',
+                               url=self.url,
+                               headers=self.header,
+                               cookies=None)
+        reqprep = req.prepare()
+        s = requests.Session()
+        resp = s.send(reqprep)
+
+        self.text = resp.text
+        #self.text = requests.get(self.url).text
         self.soup = BeautifulSoup(self.text, 'html.parser')
 
 # class to extract infos from list page
@@ -119,7 +130,7 @@ class House(Request):
             longitude = float(re.search(r'[0-9|.]+', longitude.group()).group())
         return latitude, longitude
 
-def main(state):
+def main(state, update):
     # connect mySQL database
     try:
         con=mysql.connector.connect(user='root',password='asdfghjkl;\'',database='aus_sold_houses')
@@ -208,10 +219,14 @@ def main(state):
                     house_count = house_count + 1
                     print(house_count, datetime.now())
                 except:
-                    file = open('url_with_problem.log', 'a')
-                    file.write(house_url + '\n')
-                    print('error', datetime.now())
-                    continue
+                    if update:
+                        nextpage = None
+                        break
+                    else:
+                        file = open('url_with_problem.log', 'a')
+                        file.write(house_url + '\n')
+                        print('error', datetime.now())
+                        continue
             if nextpage is not None:
                 page = page + 1
             else:
@@ -220,5 +235,5 @@ def main(state):
     print('Mission completed!!!')
 
 if __name__ == '__main__':
-    #main('victoria')
-    main('new_south_wales')
+    main('victoria', True)
+    #main('new_south_wales', True)
