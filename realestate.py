@@ -32,19 +32,8 @@ def createUrl(postcode, page_no):
 # class to send request to web server
 class Request:
     def __init__(self, url):
-        self.header = {'Accept-Charset': 'utf-8', 'Accept': 'text/css,*/*;q=0.1',
-                           'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.2) AppleWebKit/525.13 (KHTML, like Gecko) Version/3.1 Safari/525.13'}
         self.url = url
-        req = requests.Request(method='GET',
-                               url=self.url,
-                               headers=self.header,
-                               cookies=None)
-        reqprep = req.prepare()
-        s = requests.Session()
-        resp = s.send(reqprep)
-
-        self.text = resp.text
-        #self.text = requests.get(self.url).text
+        self.text = requests.get(self.url).text
         self.soup = BeautifulSoup(self.text, 'html.parser')
 
 # class to extract infos from list page
@@ -54,7 +43,7 @@ class ExtractListPage(Request):
         return nextpage
     
     def getHouseLink(self):
-        houselinks = self.soup.findAll('a', attrs={'href': re.compile(r'/sold/property-\S+-[a-z|-]+-[0-9]')})
+        houselinks = self.soup.findAll('a', attrs={'href': re.compile(r'/sold/property-\S+-[a-z|-|+]+-[0-9]')})
         return houselinks
 
 # class to get house infos from house page
@@ -130,6 +119,13 @@ class House(Request):
             longitude = float(re.search(r'[0-9|.]+', longitude.group()).group())
         return latitude, longitude
 
+class HouseSize(Request):
+    def getLandSize(self):
+        #land_size = self.soup.find('span', attrs={'class':'number'})
+        land_size = self.soup.find('p', attrs={'class':'property-story__content-body '})
+        land_size = land_size.text
+        return land_size
+
 def main(state, update):
     # connect mySQL database
     try:
@@ -155,6 +151,7 @@ def main(state, update):
             bedroom INTEGER,
             bathroom INTEGER,
             parking INTEGER,
+            land_size INTEGER,
             sold_price INTEGER,
             sold_date DATE,
             agency VARCHAR(100),
@@ -234,7 +231,12 @@ def main(state, update):
     con.close()
     print('Mission completed!!!')
 
-if __name__ == '__main__':
+def update():
     main('victoria', True)
-    #main('new_south_wales', True)
-    #main('queensland', False)
+    main('new_south_wales', True)
+    main('queensland', True)
+
+if __name__ == '__main__':
+    update()
+    #housesize = HouseSize('https://www.domain.com.au/property-profile/70-wilga-street-mount-waverley-vic-3149')
+    #print(housesize.getLandSize())
