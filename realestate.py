@@ -26,7 +26,13 @@ def readPostcode(file_name):
 # function to create valid url
 def createUrl(postcode, page_no):
     url_pre = 'https://www.realestate.com.au/sold/in-'
-    url = '{}{}/list-{}?includeSurrounding=false'.format(url_pre, postcode, page_no)
+    if postcode < 1000:
+        url = '{}0{}/list-{}?includeSurrounding=false'.format(url_pre, postcode, page_no)
+    elif postcode < 10000:
+        url = '{}{}/list-{}?includeSurrounding=false'.format(url_pre, postcode, page_no)
+    else:
+        print('Wrong postcode!!')
+        exit()
     return url
 
 # class to send request to web server
@@ -168,7 +174,7 @@ def main(state, update):
 
     # scrape data according to postcode
     house_count = 0
-    file_name = '{}.xlsx'.format(state)
+    file_name = './Postcode/{}.xlsx'.format(state)
     postcodes = readPostcode(file_name)
     for postcode in postcodes:
         print(postcode)
@@ -232,11 +238,22 @@ def main(state, update):
     print('Mission completed!!!')
 
 def update():
-    main('victoria', True)
+    main('australian_capital_territory', True)
     main('new_south_wales', True)
+    main('northern_territory', True)
     main('queensland', True)
+    main('south_australia', True)
+    main('tasmania', True)
+    main('victoria', True)
+    main('western_australia', True)
 
 if __name__ == '__main__':
-    update()
+    main('northern_territory', False)
+    main('south_australia', False)
+    main('tasmania', False)
+    main('western_australia', False)
+    
+    #update()
     #housesize = HouseSize('https://www.domain.com.au/property-profile/70-wilga-street-mount-waverley-vic-3149')
     #print(housesize.getLandSize())
+    
