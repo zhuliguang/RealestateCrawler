@@ -20,3 +20,5 @@ SELECT postcode, COUNT(postcode) AS count FROM aus_sold_houses.victoria
 GROUP BY postcode ORDER BY count DESC;
 
 ALTER TABLE aus_sold_houses.victoria ADD COLUMN land_size INTEGER NULL DEFAULT NULL AFTER parking;
+ALTER TABLE aus_sold_houses.victoria ADD COLUMN floor_area INTEGER NULL DEFAULT NULL AFTER land_size;
+ALTER TABLE aus_sold_houses.victoria ADD COLUMN year_built INTEGER NULL DEFAULT NULL AFTER floor_area;
