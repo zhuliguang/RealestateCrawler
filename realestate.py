@@ -39,7 +39,15 @@ def createUrl(postcode, page_no):
 class Request:
     def __init__(self, url):
         self.url = url
-        self.text = requests.get(self.url).text
+        self.header = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36' , 'cookie': 'mmp_ttl=c6312b25eaae3d70278fcb28ca1424d7;'}
+        req = requests.Request(method='GET',
+                               url=self.url,
+                               headers=self.header,
+                               cookies=None)
+        reqprep = req.prepare()
+        s = requests.Session()
+        resp = s.send(reqprep)
+        self.text = resp.text
         self.soup = BeautifulSoup(self.text, 'html.parser')
 
 # class to extract infos from list page
@@ -125,12 +133,24 @@ class House(Request):
             longitude = float(re.search(r'[0-9|.]+', longitude.group()).group())
         return latitude, longitude
 
-class HouseSize(Request):
-    def getLandSize(self):
-        #land_size = self.soup.find('span', attrs={'class':'number'})
-        land_size = self.soup.find('p', attrs={'class':'property-story__content-body '})
-        land_size = land_size.text
-        return land_size
+class LandInfo(Request):
+    def getLandInfo(self):
+        land_info = self.soup.find('table', attrs={'class':'info-table'})
+        land_size = None
+        floor_area = None
+        year_built = None
+        if land_info is not None:
+            land_info = land_info.text
+            land_size = re.search(r'Land size\s+[0-9]+\s', land_info)
+            if land_size is not None:
+                land_size = int(re.search(r'[0-9]+', land_size.group()).group())
+            floor_area = re.search(r'Floor area\s+[0-9]+\s', land_info)
+            if floor_area is not None:
+                floor_area = int(re.search(r'[0-9]+', floor_area.group()).group())
+            year_built = re.search(r'Year built\s+[0-9]+', land_info)
+            if year_built is not None:
+                year_built = int(re.search(r'[0-9]+', year_built.group()).group())
+        return land_size, floor_area, year_built
 
 def main(state, update):
     # connect mySQL database
@@ -158,6 +178,8 @@ def main(state, update):
             bathroom INTEGER,
             parking INTEGER,
             land_size INTEGER,
+            floor_area INTEGER,
+            year_built INTEGER,
             sold_price INTEGER,
             sold_date DATE,
             agency VARCHAR(100),
@@ -248,12 +270,7 @@ def update():
     main('western_australia', True)
 
 if __name__ == '__main__':
-    main('northern_territory', False)
-    main('south_australia', False)
-    main('tasmania', False)
-    main('western_australia', False)
-    
     #update()
-    #housesize = HouseSize('https://www.domain.com.au/property-profile/70-wilga-street-mount-waverley-vic-3149')
-    #print(housesize.getLandSize())
+    land_info = LandInfo('https://www.realestate.com.au/property/58-wilga-st-mount-waverley-vic-3149')
+    print(land_info.getLandInfo())
     
