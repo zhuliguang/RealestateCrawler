@@ -15,15 +15,22 @@ from mysql.connector import errorcode
 from datetime import datetime
 from bs4 import BeautifulSoup
 
+os.chdir(os.path.dirname(__file__))
+
+address_dict = ({'road':'rd', 'street':'st', 'place':'pl', 'avenue':'ave',
+                'parade':'pde', 'highway':'hwy', 'drive':'dr', 'grove':'gr',
+                'crescent':'cres', 'court':'ct', 'close':'cl', 'circuit':'cct',
+                'avenue':'ave', 
+                })
+
 # function to read postcode from excel file
 def readPostcode(file_name):
-    os.chdir(os.path.dirname(__file__))
     postcode = pd.read_excel(file_name).sort_values(by=['Postcode'])
     postcode = postcode.values
     postcode = postcode[:,0]
     return postcode
 
-# function to create valid url
+# function to create valid url according to postcode
 def createUrl(postcode, page_no):
     url_pre = 'https://www.realestate.com.au/sold/in-'
     if postcode < 1000:
@@ -35,11 +42,51 @@ def createUrl(postcode, page_no):
         exit()
     return url
 
+# function to create valid url according to address
+def createHouseUrl(address, suburb, postcode, use_short):
+    url_pre = 'https://www.realestate.com.au/property/'
+    str_address = address.lower()
+    if re.search(r'[0-9|a-z]+/[0-9]', str_address) is not None:
+        str_address = 'unit-' + str_address
+    if use_short:
+        for key in address_dict.keys():
+            street_name = re.search(key, str_address)
+            if street_name is not None:
+                str_address = re.sub(street_name.group(), address_dict[key], str_address)
+    str_suburb = suburb.lower()
+    if postcode < 1000:
+        str_postcode = 'nt-0{:d}'.format(postcode)
+    elif postcode < 2600:
+        str_postcode = 'nsw-{:d}'.format(postcode)
+    elif postcode < 2700:
+        str_postcode = 'act-{:d}'.format(postcode)
+    elif postcode < 2800:
+        str_postcode = 'nsw-{:d}'.format(postcode)
+    elif postcode < 3000:
+        str_postcode = 'act-{:d}'.format(postcode)
+    elif postcode < 4000:
+        str_postcode = 'vic-{:d}'.format(postcode)
+    elif postcode < 5000:
+        str_postcode = 'qld-{:d}'.format(postcode)
+    elif postcode < 6000:
+        str_postcode = 'sa-{:d}'.format(postcode)
+    elif postcode < 7000:
+        str_postcode = 'wa-{:d}'.format(postcode)
+    elif postcode < 8000:
+        str_postcode = 'tas-{:d}'.format(postcode)
+    str_address = '{}-{}-{}'.format(str_address, str_suburb, str_postcode)
+    str_address = re.sub('[,|\s|/]', '-', str_address)
+    for _ in range(4):
+        str_address = re.sub('--', '-', str_address)
+    url = url_pre + str_address
+    return url
+
 # class to send request to web server
 class Request:
     def __init__(self, url):
         self.url = url
-        self.header = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36' , 'cookie': 'mmp_ttl=c6312b25eaae3d70278fcb28ca1424d7;'}
+        self.header = ({'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36' , 
+                        'cookie': 'mmp_ttl=c6312b25eaae3d70278fcb28ca1424d7;'})
         req = requests.Request(method='GET',
                                url=self.url,
                                headers=self.header,
@@ -256,6 +303,7 @@ def main(state, update):
                 page = page + 1
             else:
                 break
+    cursor.close()
     con.close()
     print('Mission completed!!!')
 
@@ -269,8 +317,57 @@ def update():
     main('victoria', True)
     main('western_australia', True)
 
+def addLandInfo(state):
+    # connect mySQL database
+    try:
+        con=mysql.connector.connect(user='root',password='asdfghjkl;\'',database='aus_sold_houses')
+        print("Database connected sucessfully!")
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Something is wrong with your user name or password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(err)
+        exit()
+    sql = """ SELECT house_id, address, suburb, postcode FROM {}
+            """.format(state)
+    cursor = con.cursor()
+    cursor.execute(sql)
+    for address in cursor:
+        url = createHouseUrl(address[1], address[2], address[3], True)
+        land_info = LandInfo(url)
+        page_exist = land_info.soup.find('table', attrs={'class':'info-table'})
+        if page_exist is None:
+            url = createHouseUrl(address[1], address[2], address[3], False)
+            land_info = LandInfo(url)
+        land_size, floor_area, year_built = land_info.getLandInfo()
+        print(land_info.getLandInfo(), url)
+        # save to mySQL database
+        if land_size is not None:
+            insert_sql = """UPDATE {} SET land_size = %s
+                WHERE house_id = %s;""".format(state)
+            insert_val = (land_size, address[0])
+            cursor.execute(insert_sql, insert_val)
+            con.commit()
+        if floor_area is not None:
+            insert_sql = """UPDATE {} SET floor_area = %s
+                WHERE house_id = %s;""".format(state)
+            insert_val = (floor_area, address[0])
+            cursor.execute(insert_sql, insert_val)
+            con.commit()
+        if year_built is not None:
+            insert_sql = """UPDATE {} SET year_built = %s
+                WHERE house_id = %s;""".format(state)
+            insert_val = (year_built, address[0])
+            cursor.execute(insert_sql, insert_val)
+            con.commit()
+        time.sleep(0.5)
+    cursor.close()
+    con.close()
+    print('Mission completed!!!')
+
 if __name__ == '__main__':
     #update()
-    land_info = LandInfo('https://www.realestate.com.au/property/58-wilga-st-mount-waverley-vic-3149')
-    print(land_info.getLandInfo())
+    addLandInfo('victoria')
     
