@@ -1,4 +1,5 @@
 SELECT * FROM aus_sold_houses.new_south_wales
+WHERE postcode > 2600
 ORDER BY id DESC;
 
 SELECT COUNT(*) FROM aus_sold_houses.new_south_wales;
@@ -9,7 +10,8 @@ ORDER BY time DESC;
 
 SET SQL_SAFE_UPDATES = 0;
 DELETE FROM aus_sold_houses.new_south_wales
-WHERE postcode >= 3000 OR postcode < 2000;
+WHERE postcode >= 2900 OR postcode < 2000
+OR (postcode >= 2600 AND postcode < 2700);
 SET SQL_SAFE_UPDATES = 1;
 
 ALTER TABLE aus_sold_houses.new_south_wales ADD COLUMN land_size INTEGER NULL DEFAULT NULL AFTER parking;

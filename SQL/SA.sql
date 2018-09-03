@@ -1,6 +1,7 @@
 SELECT * FROM aus_sold_houses.south_australia
 ORDER BY id DESC;
 
-ALTER TABLE aus_sold_houses.south_australia ADD COLUMN land_size INTEGER NULL DEFAULT NULL AFTER parking;
-ALTER TABLE aus_sold_houses.south_australia ADD COLUMN floor_area INTEGER NULL DEFAULT NULL AFTER land_size;
-ALTER TABLE aus_sold_houses.south_australia ADD COLUMN year_built INTEGER NULL DEFAULT NULL AFTER floor_area;
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM aus_sold_houses.south_australia
+WHERE postcode >= 6000 OR postcode < 5000;
+SET SQL_SAFE_UPDATES = 1;
