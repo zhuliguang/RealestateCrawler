@@ -183,20 +183,26 @@ class House(Request):
 class LandInfo(Request):
     def getLandInfo(self):
         land_info = self.soup.find('table', attrs={'class':'info-table'})
-        land_size = None
-        floor_area = None
-        year_built = None
+        land_size = -1
+        floor_area = -1
+        year_built = -1
         if land_info is not None:
             land_info = land_info.text
             land_size = re.search(r'Land size\s+[0-9]+\s', land_info)
             if land_size is not None:
                 land_size = int(re.search(r'[0-9]+', land_size.group()).group())
+            else:
+                land_size = -1
             floor_area = re.search(r'Floor area\s+[0-9]+\s', land_info)
             if floor_area is not None:
                 floor_area = int(re.search(r'[0-9]+', floor_area.group()).group())
+            else:
+                floor_area = -1
             year_built = re.search(r'Year built\s+[0-9]+', land_info)
             if year_built is not None:
                 year_built = int(re.search(r'[0-9]+', year_built.group()).group())
+            else:
+                year_built = -1
         return land_size, floor_area, year_built
 
 def main(state, update):
@@ -303,7 +309,6 @@ def main(state, update):
                 page = page + 1
             else:
                 break
-    cursor.close()
     con.close()
     print('Mission completed!!!')
 
@@ -330,44 +335,73 @@ def addLandInfo(state):
         else:
             print(err)
         exit()
-    sql = """ SELECT house_id, address, suburb, postcode FROM {}
-            """.format(state)
-    cursor = con.cursor()
-    cursor.execute(sql)
-    for address in cursor:
-        url = createHouseUrl(address[1], address[2], address[3], True)
+    sql = """ SELECT house_id, address, suburb, postcode, id FROM {}
+            WHERE land_size is null
+            ORDER BY id""".format(state)
+    select_cursor = con.cursor(dictionary=True, buffered=True)
+    update_cursor = con.cursor()
+    select_cursor.execute(sql)
+    while True:
+        address = select_cursor.fetchone()
+        if address == None:
+            break
+        url = createHouseUrl(address['address'], address['suburb'], address['postcode'], True)
         land_info = LandInfo(url)
+        ip_interrupted = land_info.soup.find('h1', attrs={'class':'display1'})
+        if ip_interrupted is not None:
+            if ip_interrupted.text == 'Sorry to interrupt...':
+                print('ip interrupted', datetime.now())
+                break
         page_exist = land_info.soup.find('table', attrs={'class':'info-table'})
         if page_exist is None:
-            url = createHouseUrl(address[1], address[2], address[3], False)
+            url = createHouseUrl(address['address'], address['suburb'], address['postcode'], False)
             land_info = LandInfo(url)
+            ip_interrupted = land_info.soup.find('h1', attrs={'class':'display1'})
+            if ip_interrupted is not None:
+                if ip_interrupted.text == 'Sorry to interrupt...':
+                    print('ip interrupted', datetime.now())
+                    break
         land_size, floor_area, year_built = land_info.getLandInfo()
-        print(land_info.getLandInfo(), url)
+        print(land_info.getLandInfo(), url, datetime.now())
         # save to mySQL database
-        if land_size is not None:
-            insert_sql = """UPDATE {} SET land_size = %s
-                WHERE house_id = %s;""".format(state)
-            insert_val = (land_size, address[0])
-            cursor.execute(insert_sql, insert_val)
-            con.commit()
-        if floor_area is not None:
-            insert_sql = """UPDATE {} SET floor_area = %s
-                WHERE house_id = %s;""".format(state)
-            insert_val = (floor_area, address[0])
-            cursor.execute(insert_sql, insert_val)
-            con.commit()
-        if year_built is not None:
-            insert_sql = """UPDATE {} SET year_built = %s
-                WHERE house_id = %s;""".format(state)
-            insert_val = (year_built, address[0])
-            cursor.execute(insert_sql, insert_val)
-            con.commit()
-        time.sleep(0.5)
-    cursor.close()
+        insert_sql = """UPDATE {} SET land_size = %s
+            WHERE house_id = %s""".format(state)
+        insert_val = (land_size, address['house_id'])
+        update_cursor.execute(insert_sql, insert_val)
+        insert_sql = """UPDATE {} SET floor_area = %s
+            WHERE house_id = %s""".format(state)
+        insert_val = (floor_area, address['house_id'])
+        update_cursor.execute(insert_sql, insert_val)
+        insert_sql = """UPDATE {} SET year_built = %s
+            WHERE house_id = %s""".format(state)
+        insert_val = (year_built, address['house_id'])
+        update_cursor.execute(insert_sql, insert_val)
+        con.commit()
+        time.sleep(2)
     con.close()
     print('Mission completed!!!')
 
 if __name__ == '__main__':
     #update()
     addLandInfo('victoria')
-    
+    '''
+    url = createHouseUrl('408/29 Market Street', 'melbourne', 3000, True)
+    land_info = LandInfo(url)
+    print(land_info.getLandInfo(), datetime.now())
+    ip_interrupted = land_info.soup.find('h1', attrs={'class':'display1'})
+    if ip_interrupted is not None:
+        if ip_interrupted.text == 'Sorry to interrupt...':
+            verification_code = land_info.soup.find('div', attrs={'id':'challengeQuestion'}).text
+            verification_code = re.search('[0-9]+', verification_code).group()
+            print(verification_code)
+            headers = ({'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36' , 
+                        'cookie': 'mmp_ttl=c6312b25eaae3d70278fcb28ca1424d7;'})
+            #payload = {'challengeAnswer':verification_code}
+            payload = {'challengeAnswer':'62'}
+            requests.post(url,payload)
+            land_info = LandInfo(url)
+            print(land_info.getLandInfo(), datetime.now())
+            exit()
+    #file = open('1.html', 'w')
+    #file.write(land_info.text)
+    '''
