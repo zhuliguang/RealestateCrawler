@@ -14,9 +14,8 @@ from mysql.connector import errorcode
 from classes import Request, ExtractListPage, House, LandInfo
 from functions import readPostcode, createUrl, createHouseUrl1, createHouseUrl2
 
+# change working directory to current folder
 os.chdir(os.path.dirname(__file__))
-
-
 
 # main function of scrawler
 def main(state, update):
@@ -103,13 +102,33 @@ def main(state, update):
                     solddate = house.getSoldDate()
                     agency = house.getAgency()
                     latitude, longitude = house.getLocation()
+                    if REA_id is not None:
+                        land_url = createHouseUrl2(REA_id)
+                        land_info = LandInfo(land_url)
+                        if land_info.status_code == 200:
+                            land_url = land_info.redir_url
+                            land_info = LandInfo(land_url)
+                            if land_info.status_code == 200:
+                                land_size, floor_area, year_built = land_info.getLandInfo()
+                                print(land_info.header_no, land_info.getLandInfo(), datetime.now())
+                                time.sleep(0.001)
+                            elif land_info.status_code == 400:
+                                print(land_info.header_no, datetime.now())
+                                break
+                        elif land_info.status_code == 400:
+                            print(land_info.header_no, datetime.now())
+                            break
+                    else:
+                        land_size = 0
+                        floor_area = 0
+                        year_built = 0
                     # save to mySQL database
                     sql = """INSERT INTO {} (
-                        house_id, REA_id, address, suburb, postcode, house_type, bedroom, bathroom,
-                        parking, sold_price, sold_date, agency, latitude, longitude, link, time) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())""".format(state)
-                    val = (house_id, REA_id, address, suburb, post_code, housetype, bedroom, bathroom,
-                        parking, soldprice, solddate, agency, latitude, longitude, house_url)
+                        house_id, REA_id, address, suburb, postcode, house_type, bedroom, bathroom, parking, land_size, 
+                        floor_area, year_built, sold_price, sold_date, agency, latitude, longitude, link, time) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())""".format(state)
+                    val = (house_id, REA_id, address, suburb, post_code, housetype, bedroom, bathroom, parking, land_size, 
+                            floor_area, year_built, soldprice, solddate, agency, latitude, longitude, house_url)
                     cursor.execute(sql, val)
                     con.commit()
                     house_count = house_count + 1
@@ -261,19 +280,13 @@ if __name__ == '__main__':
     #update()
     #addLandInfo('victoria')
     #testConnection()
-    '''addREAID('australian_capital_territory')
+    '''
+    addREAID('australian_capital_territory')
     addREAID('new_south_wales')
     addREAID('northern_territory')
     addREAID('queensland')
     addREAID('south_australia')
     addREAID('tasmania')
     #addREAID('victoria')
-    addREAID('western_australia')'''
-
-    url = createHouseUrl2(4150215)
-    land_info = LandInfo(url)
-    if land_info.status_code == 200:
-        url = land_info.redir_url
-        land_info = LandInfo(url)
-        if land_info.status_code == 200:
-            print(land_info.header_no, land_info.getLandInfo(), datetime.now())
+    addREAID('western_australia')
+    '''
