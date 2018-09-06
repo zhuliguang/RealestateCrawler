@@ -17,3 +17,6 @@ SET SQL_SAFE_UPDATES = 1;
 ALTER TABLE aus_sold_houses.new_south_wales ADD COLUMN land_size INTEGER NULL DEFAULT NULL AFTER parking;
 ALTER TABLE aus_sold_houses.new_south_wales ADD COLUMN floor_area INTEGER NULL DEFAULT NULL AFTER land_size;
 ALTER TABLE aus_sold_houses.new_south_wales ADD COLUMN year_built INTEGER NULL DEFAULT NULL AFTER floor_area;
+
+ALTER TABLE aus_sold_houses.new_south_wales ADD COLUMN REA_id INTEGER NULL DEFAULT NULL AFTER house_id;
+ALTER TABLE aus_sold_houses.new_south_wales ADD UNIQUE (REA_id);
