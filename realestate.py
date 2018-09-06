@@ -280,8 +280,8 @@ if __name__ == '__main__':
     #update()
     #addLandInfo('victoria')
     #testConnection()
-    '''
-    addREAID('australian_capital_territory')
+    #'''
+    #addREAID('australian_capital_territory')
     addREAID('new_south_wales')
     addREAID('northern_territory')
     addREAID('queensland')
@@ -289,4 +289,4 @@ if __name__ == '__main__':
     addREAID('tasmania')
     #addREAID('victoria')
     addREAID('western_australia')
-    '''
+    #'''

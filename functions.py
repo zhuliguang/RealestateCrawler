@@ -4,6 +4,7 @@ Author: Nan Li
 Contact: linan.lqq0@gmail.com
 '''
 # import packages
+import re
 import pandas as pd
 
 # short names dictionary
