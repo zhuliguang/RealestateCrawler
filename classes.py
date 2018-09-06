@@ -8,6 +8,7 @@ Contact: linan.lqq0@gmail.com
 import re
 import requests
 from random import randrange
+from datetime import datetime
 from bs4 import BeautifulSoup
 
 # class to send request to web server
@@ -164,7 +165,7 @@ class House(Request):
         suburb_temp = self.soup.find('span', attrs={'class':'property-info-address__suburb'}).text
         suburb = re.search(r'[a-z|A-Z|\s]+,', suburb_temp).group()[:-1]
         post_code = re.search(r'[0-9]+', suburb_temp).group()
-        return suburb, post_code
+        return suburb, int(post_code)
 
     def getHouseType(self):
         housetype = self.soup.find('span', attrs={'class':'property-info__property-type'}).text
