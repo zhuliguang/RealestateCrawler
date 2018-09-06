@@ -8,12 +8,11 @@ Contact: linan.lqq0@gmail.com
 import os
 import re
 import time
-import requests
 import pandas as pd
 import mysql.connector
-from mysql.connector import errorcode
 from datetime import datetime
-from bs4 import BeautifulSoup
+from mysql.connector import errorcode
+from class_define import Request, ExtractListPage, House, LandInfo
 
 os.chdir(os.path.dirname(__file__))
 
@@ -80,130 +79,6 @@ def createHouseUrl(address, suburb, postcode, use_short):
         str_address = re.sub('--', '-', str_address)
     url = url_pre + str_address
     return url
-
-# class to send request to web server
-class Request:
-    def __init__(self, url):
-        self.url = url
-        self.header = ({'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36' , 
-                        'cookie': 'mmp_ttl=c6312b25eaae3d70278fcb28ca1424d7;'})
-        req = requests.Request(method='GET',
-                               url=self.url,
-                               headers=self.header,
-                               cookies=None)
-        reqprep = req.prepare()
-        s = requests.Session()
-        resp = s.send(reqprep)
-        self.text = resp.text
-        self.soup = BeautifulSoup(self.text, 'html.parser')
-
-# class to extract infos from list page
-class ExtractListPage(Request):
-    def getNextPage(self):
-        nextpage = self.soup.find('a', attrs={'title':'Go to Next Page'})
-        return nextpage
-    
-    def getHouseLink(self):
-        houselinks = self.soup.findAll('a', attrs={'href': re.compile(r'/sold/property-\S+-[a-z|-|+]+-[0-9]')})
-        return houselinks
-
-# class to get house infos from house page
-class House(Request):
-    def getHouseID(self):
-        house_id = self.soup.find('span', attrs={'class':'listing-metrics__property-id'})
-        if house_id is not None:
-            house_id = int(re.search(r'[0-9]+', house_id.text).group())
-        return house_id
-
-    def getAddress(self):
-        address = self.soup.find('span', attrs={'class':'property-info-address__street'}).text
-        return address
-
-    def getSuburb(self):
-        suburb_temp = self.soup.find('span', attrs={'class':'property-info-address__suburb'}).text
-        suburb = re.search(r'[a-z|A-Z|\s]+,', suburb_temp).group()[:-1]
-        post_code = re.search(r'[0-9]+', suburb_temp).group()
-        return suburb, post_code
-
-    def getHouseType(self):
-        housetype = self.soup.find('span', attrs={'class':'property-info__property-type'}).text
-        return housetype
-
-    def getFeatures(self):
-        bedroom = 0
-        bathroom = 0
-        parking = 0
-        feature_str = ''
-        for feature in self.soup.findAll('li', attrs={'class':'general-features__feature'}):
-            feature_str = feature_str + feature.get('aria-label')
-        bed = re.search(r'[0-9]+\sbedroom', feature_str)
-        if bed is not None:
-            bedroom = int(re.search(r'[0-9]+', bed.group()).group())
-        bath = re.search(r'[0-9]+\sbathroom', feature_str)
-        if bath is not None:
-            bathroom = int(re.search(r'[0-9]+', bath.group()).group())
-        park = re.search(r'[0-9]+\sparking space', feature_str)
-        if park is not None:
-            parking = int(re.search(r'[0-9]+', park.group()).group())
-        return bedroom, bathroom, parking
-
-    def getSoldPrice(self):
-        soldprice = None
-        soldprice_str = self.soup.find('span', attrs={'class':'property-price property-info__price'}).text
-        price = re.search(r'[0-9,]+', soldprice_str)
-        if price is not None:
-            soldprice = int(price.group().replace(',', ''))
-        return soldprice
-
-    def getSoldDate(self):
-        solddate = self.soup.find('p', attrs={'class':'property-info__secondary-content'})
-        if solddate is not None:
-            solddate = solddate.text[8:]
-            try:
-                solddate = datetime.strptime(solddate, '%d %b %Y')
-            except:
-                solddate = None
-        return solddate
-    
-    def getAgency(self):
-        agency = self.soup.find('p', attrs={'class':'agency-info__name'})
-        if agency is not None:
-            agency = agency.text
-        return agency
-
-    def getLocation(self):
-        latitude = re.search(r'"latitude":-[0-9|.]+', self.text)
-        if latitude is not None:
-            latitude = -float(re.search(r'[0-9|.]+', latitude.group()).group())
-        longitude = re.search(r'"longitude":[0-9|.]+', self.text)
-        if longitude is not None:
-            longitude = float(re.search(r'[0-9|.]+', longitude.group()).group())
-        return latitude, longitude
-
-class LandInfo(Request):
-    def getLandInfo(self):
-        land_info = self.soup.find('table', attrs={'class':'info-table'})
-        land_size = -1
-        floor_area = -1
-        year_built = -1
-        if land_info is not None:
-            land_info = land_info.text
-            land_size = re.search(r'Land size\s+[0-9]+\s', land_info)
-            if land_size is not None:
-                land_size = int(re.search(r'[0-9]+', land_size.group()).group())
-            else:
-                land_size = -1
-            floor_area = re.search(r'Floor area\s+[0-9]+\s', land_info)
-            if floor_area is not None:
-                floor_area = int(re.search(r'[0-9]+', floor_area.group()).group())
-            else:
-                floor_area = -1
-            year_built = re.search(r'Year built\s+[0-9]+', land_info)
-            if year_built is not None:
-                year_built = int(re.search(r'[0-9]+', year_built.group()).group())
-            else:
-                year_built = -1
-        return land_size, floor_area, year_built
 
 def main(state, update):
     # connect mySQL database
@@ -279,6 +154,8 @@ def main(state, update):
                     house_id = house.getHouseID()
                     address = house.getAddress()
                     suburb, post_code = house.getSuburb()
+                    if post_code != postcode:
+                        continue
                     housetype = house.getHouseType()
                     bedroom, bathroom, parking = house.getFeatures()
                     soldprice = house.getSoldPrice()
@@ -347,61 +224,62 @@ def addLandInfo(state):
             break
         url = createHouseUrl(address['address'], address['suburb'], address['postcode'], True)
         land_info = LandInfo(url)
-        ip_interrupted = land_info.soup.find('h1', attrs={'class':'display1'})
-        if ip_interrupted is not None:
-            if ip_interrupted.text == 'Sorry to interrupt...':
-                print('ip interrupted', datetime.now())
-                break
-        page_exist = land_info.soup.find('table', attrs={'class':'info-table'})
-        if page_exist is None:
-            url = createHouseUrl(address['address'], address['suburb'], address['postcode'], False)
-            land_info = LandInfo(url)
-            ip_interrupted = land_info.soup.find('h1', attrs={'class':'display1'})
-            if ip_interrupted is not None:
-                if ip_interrupted.text == 'Sorry to interrupt...':
-                    print('ip interrupted', datetime.now())
+        if land_info.status_code == 200:
+            page_exist = land_info.soup.find('table', attrs={'class':'info-table'})
+            if page_exist is None:
+                url = createHouseUrl(address['address'], address['suburb'], address['postcode'], False)
+                land_info = LandInfo(url)
+                if land_info.status_code == 400:
                     break
-        land_size, floor_area, year_built = land_info.getLandInfo()
-        print(land_info.getLandInfo(), url, datetime.now())
-        # save to mySQL database
-        insert_sql = """UPDATE {} SET land_size = %s
-            WHERE house_id = %s""".format(state)
-        insert_val = (land_size, address['house_id'])
-        update_cursor.execute(insert_sql, insert_val)
-        insert_sql = """UPDATE {} SET floor_area = %s
-            WHERE house_id = %s""".format(state)
-        insert_val = (floor_area, address['house_id'])
-        update_cursor.execute(insert_sql, insert_val)
-        insert_sql = """UPDATE {} SET year_built = %s
-            WHERE house_id = %s""".format(state)
-        insert_val = (year_built, address['house_id'])
-        update_cursor.execute(insert_sql, insert_val)
-        con.commit()
-        time.sleep(2)
+            land_size, floor_area, year_built = land_info.getLandInfo()
+            print(land_info.getLandInfo(), url, datetime.now())
+            # save to mySQL database
+            insert_sql = """UPDATE {} SET land_size = %s
+                WHERE house_id = %s""".format(state)
+            insert_val = (land_size, address['house_id'])
+            update_cursor.execute(insert_sql, insert_val)
+            insert_sql = """UPDATE {} SET floor_area = %s
+                WHERE house_id = %s""".format(state)
+            insert_val = (floor_area, address['house_id'])
+            update_cursor.execute(insert_sql, insert_val)
+            insert_sql = """UPDATE {} SET year_built = %s
+                WHERE house_id = %s""".format(state)
+            insert_val = (year_built, address['house_id'])
+            update_cursor.execute(insert_sql, insert_val)
+            con.commit()
+            time.sleep(0.001)
+        elif land_info.status_code == 400:
+            break
     con.close()
+    print('ip interrupted', land_info.header_no, datetime.now())
     print('Mission completed!!!')
+
+def testConnection():
+    while True:
+        url = 'https://www.realestate.com.au/property/lookup?id=4150213'
+        land_info = LandInfo(url)
+        if land_info.status_code == 200:
+            url = land_info.redir_url
+            land_info = LandInfo(url)
+            if land_info.status_code == 200:
+                print(land_info.header_no, land_info.getLandInfo(), datetime.now())
+                time.sleep(0.001)
+            elif land_info.status_code == 400:
+                break
+        elif land_info.status_code == 400:
+            break
+    verification_code = land_info.soup.find('div', attrs={'id':'challengeQuestion'}).text
+    verification_code = re.search('[0-9]+', verification_code).group()
+    print(land_info.header_no, verification_code)
 
 if __name__ == '__main__':
     #update()
-    addLandInfo('victoria')
-    '''
-    url = createHouseUrl('408/29 Market Street', 'melbourne', 3000, True)
+    #addLandInfo('victoria')
+    #testConnection()
+    url = 'https://www.realestate.com.au/property/lookup?id=4150213'
     land_info = LandInfo(url)
-    print(land_info.getLandInfo(), datetime.now())
-    ip_interrupted = land_info.soup.find('h1', attrs={'class':'display1'})
-    if ip_interrupted is not None:
-        if ip_interrupted.text == 'Sorry to interrupt...':
-            verification_code = land_info.soup.find('div', attrs={'id':'challengeQuestion'}).text
-            verification_code = re.search('[0-9]+', verification_code).group()
-            print(verification_code)
-            headers = ({'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36' , 
-                        'cookie': 'mmp_ttl=c6312b25eaae3d70278fcb28ca1424d7;'})
-            #payload = {'challengeAnswer':verification_code}
-            payload = {'challengeAnswer':'62'}
-            requests.post(url,payload)
-            land_info = LandInfo(url)
-            print(land_info.getLandInfo(), datetime.now())
-            exit()
-    #file = open('1.html', 'w')
-    #file.write(land_info.text)
-    '''
+    if land_info.status_code == 200:
+        url = land_info.redir_url
+        land_info = LandInfo(url)
+        if land_info.status_code == 200:
+            print(land_info.header_no, land_info.getLandInfo(), datetime.now())
