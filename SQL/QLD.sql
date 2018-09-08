@@ -1,4 +1,5 @@
-SELECT * FROM aus_sold_houses.queensland
+SELECT COUNT(*) FROM aus_sold_houses.queensland
+WHERE REA_id is not null
 ORDER BY id DESC;
 
 SELECT * FROM aus_sold_houses.queensland

@@ -1,4 +1,4 @@
-SELECT * FROM aus_sold_houses.australian_capital_territory
+SELECT COUNT(*) FROM aus_sold_houses.australian_capital_territory
 WHERE REA_id is not null
 ORDER BY id DESC;
 

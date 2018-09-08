@@ -1,4 +1,5 @@
-SELECT * FROM aus_sold_houses.northern_territory
+SELECT COUNT(*) FROM aus_sold_houses.northern_territory
+WHERE REA_id is not Null
 ORDER BY id DESC;
 
 SET SQL_SAFE_UPDATES = 0;

@@ -1,5 +1,5 @@
 SELECT * FROM aus_sold_houses.new_south_wales
-WHERE postcode > 2600
+WHERE REA_id is not null
 ORDER BY id DESC;
 
 SELECT COUNT(*) FROM aus_sold_houses.new_south_wales;
