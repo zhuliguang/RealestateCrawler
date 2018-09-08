@@ -243,17 +243,14 @@ def addREAID(state):
         url = link['link']
         house = House(url)
         REA_id = house.getREAID()
-        print(link['id'], REA_id, datetime.now())
+        print(state, link['id'], REA_id, datetime.now())
         # save to mySQL database
         if REA_id is not None:
-            try:
-                insert_sql = """UPDATE {} SET REA_id = %s
-                    WHERE id = %s""".format(state)
-                insert_val = (REA_id, link['id'])
-                update_cursor.execute(insert_sql, insert_val)
-                con.commit()
-            except:
-                continue
+            insert_sql = """UPDATE {} SET REA_id = %s
+                WHERE id = %s""".format(state)
+            insert_val = (REA_id, link['id'])
+            update_cursor.execute(insert_sql, insert_val)
+            con.commit()
     con.close()
     print('Mission completed!!!')
 
@@ -281,12 +278,10 @@ if __name__ == '__main__':
     #addLandInfo('victoria')
     #testConnection()
     #'''
-    #addREAID('australian_capital_territory')
-    addREAID('new_south_wales')
-    addREAID('northern_territory')
-    addREAID('queensland')
-    addREAID('south_australia')
-    addREAID('tasmania')
+    #addREAID('new_south_wales')
+    #addREAID('queensland')
+    #addREAID('south_australia')
+    #addREAID('tasmania')
     #addREAID('victoria')
-    addREAID('western_australia')
+    #addREAID('western_australia')
     #'''
