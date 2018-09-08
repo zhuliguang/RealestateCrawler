@@ -241,7 +241,13 @@ def addREAID(state):
         if link == None:
             break
         url = link['link']
-        house = House(url)
+        while True:
+            try:
+                house = House(url)
+                break
+            except:
+                time.sleep(5)
+                continue
         REA_id = house.getREAID()
         print(state, link['id'], REA_id, datetime.now())
         # save to mySQL database
