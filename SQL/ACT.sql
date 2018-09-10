@@ -2,8 +2,8 @@ SELECT COUNT(*) FROM aus_sold_houses.australian_capital_territory
 WHERE REA_id is not null
 ORDER BY id DESC;
 
-SELECT * FROM aus_sold_houses.australian_capital_territory
-WHERE id = 93
+SELECT COUNT(*) FROM aus_sold_houses.australian_capital_territory
+WHERE land_size is not Null or floor_area is not Null or year_built is not Null
 ORDER BY id DESC;
 
 SET SQL_SAFE_UPDATES = 0;
