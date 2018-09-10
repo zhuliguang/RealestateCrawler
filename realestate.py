@@ -160,8 +160,8 @@ def update():
     main('victoria', True)
     main('western_australia', True)
 
-# add land_size floor_area year_built
-def addLandInfo(state):
+# add land_size floor_area year_built method1 (using address to generate url)
+def addLandInfo1(state):
     # connect mySQL database
     try:
         con=mysql.connector.connect(user='root',password='asdfghjkl;\'',database='aus_sold_houses')
@@ -192,6 +192,7 @@ def addLandInfo(state):
                 url = createHouseUrl1(address['address'], address['suburb'], address['postcode'], False)
                 land_info = LandInfo(url)
                 if land_info.status_code == 400:
+                    print('ip interrupted', land_info.header_no, datetime.now())
                     break
             land_size, floor_area, year_built = land_info.getLandInfo()
             print(land_info.getLandInfo(), url, datetime.now())
@@ -211,9 +212,65 @@ def addLandInfo(state):
             con.commit()
             time.sleep(0.001)
         elif land_info.status_code == 400:
+            print('ip interrupted', land_info.header_no, datetime.now())
             break
     con.close()
-    print('ip interrupted', land_info.header_no, datetime.now())
+    print('Mission completed!!!')
+
+# add land_size floor_area year_built method1 (using REA_id to generate url)
+def addLandInfo2(state):
+    # connect mySQL database
+    try:
+        con=mysql.connector.connect(user='root',password='asdfghjkl;\'',database='aus_sold_houses')
+        print("Database connected sucessfully!")
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Something is wrong with your user name or password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(err)
+        exit()
+    sql = """ SELECT id, house_id, REA_id FROM {}
+            WHERE land_size is null AND REA_id is not null
+            ORDER BY id""".format(state)
+    select_cursor = con.cursor(dictionary=True, buffered=True)
+    update_cursor = con.cursor()
+    select_cursor.execute(sql)
+    while True:
+        REAID = select_cursor.fetchone()
+        if REAID == None:
+            break
+        url = createHouseUrl2(REAID['REA_id'])
+        land_info = LandInfo(url)
+        if land_info.status_code == 200:
+            url = land_info.redir_url
+            land_info = LandInfo(url)
+            if land_info.status_code == 200:
+                land_size, floor_area, year_built = land_info.getLandInfo()
+                print(REAID['id'], land_info.getLandInfo(), url, datetime.now())
+                # save to mySQL database
+                insert_sql = """UPDATE {} SET land_size = %s
+                    WHERE house_id = %s""".format(state)
+                insert_val = (land_size, REAID['house_id'])
+                update_cursor.execute(insert_sql, insert_val)
+                insert_sql = """UPDATE {} SET floor_area = %s
+                    WHERE house_id = %s""".format(state)
+                insert_val = (floor_area, REAID['house_id'])
+                update_cursor.execute(insert_sql, insert_val)
+                insert_sql = """UPDATE {} SET year_built = %s
+                    WHERE house_id = %s""".format(state)
+                insert_val = (year_built, REAID['house_id'])
+                update_cursor.execute(insert_sql, insert_val)
+                con.commit()
+                time.sleep(0.001)
+            elif land_info.status_code == 400:
+                print('ip interrupted', land_info.header_no, datetime.now())
+                break
+        elif land_info.status_code == 400:
+            print('ip interrupted', land_info.header_no, datetime.now())
+            break
+    con.close()
     print('Mission completed!!!')
 
 # add REA_property_id
@@ -281,13 +338,10 @@ def testConnection():
 
 if __name__ == '__main__':
     #update()
-    #addLandInfo('victoria')
+    addLandInfo2('new_south_wales')
+    #addLandInfo2('queensland')
+    #addLandInfo2('south_australia')
+    #addLandInfo2('tasmania')
+    #addLandInfo2('victoria')
+    #addLandInfo2('western_australia')
     #testConnection()
-    #'''
-    #addREAID('new_south_wales')
-    #addREAID('queensland')
-    #addREAID('south_australia')
-    #addREAID('tasmania')
-    #addREAID('victoria')
-    #addREAID('western_australia')
-    #'''

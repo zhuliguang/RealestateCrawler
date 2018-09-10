@@ -16,7 +16,7 @@ class Request:
     def __init__(self, url):
         self.url = url
         self.redir_url = None
-        randnum = randrange(36)
+        randnum = randrange(53)
         if randnum == 0:   # Macbook
             self.header = ({'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36' , 
                             'cookie': 'mmp_ttl=c6312b25eaae3d70278fcb28ca1424d7'})
@@ -61,10 +61,10 @@ class Request:
                             'cookie': 'mmp_ttl=d5cabcd05f19fcccde1e0f2f911d7096'})
         elif randnum == 14: # Chrome Android tablet
             self.header = ({'User-Agent': 'Mozilla/5.0 (Linux; Android 4.3; Nexus 7 Build/JSS15Q) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-                            'cookie': 'mmp_ttl=037450c07c9bc8c3fc622e467aff8c75'})
-        elif randnum == 15: # Chrome iPhone
-            self.header = ({'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1 (KHTML, like Gecko) CriOS/68.0.3440.106 Mobile/13B143 Safari/601.1.46',
-                            'cookie': 'mmp_ttl=d7ca2012eb016baa928d6b6e2c5ee820'})
+                            'cookie': 'mmp_ttl=2afc9b9fefc9cac6cd57c55bb0a58265'})
+        elif randnum == 15: # Firefox iPhone
+            self.header = ({'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) FxiOS/1.0 Mobile/12F69 Safari/600.1.4',
+                            'cookie': 'mmp_ttl=3ff70af2f331232c52e47c8cc402ffbb'})
         elif randnum == 16: # Chrome iPad
             self.header = ({'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1 (KHTML, like Gecko) CriOS/68.0.3440.106 Mobile/13B143 Safari/601.1.46',
                             'cookie': 'mmp_ttl=76eb79b278066d1dddeb0e994ed9db1a'})
@@ -122,9 +122,60 @@ class Request:
         elif randnum == 34: # UC iOS
             self.header = ({'User-Agent': 'UCWEB/2.0 (iPad; U; CPU OS 7_1 like Mac OS X; en; iPad3,6) U2/1.0.0 UCBrowser/9.3.1.344',
                             'cookie': 'mmp_ttl=8c5a4e592d6e791d7a4e6d7d1ab7a285'})
-        else:               # UC Windows phone
+        elif randnum == 35: # UC Windows phone
             self.header = ({'User-Agent': 'NokiaX2-02/2.0 (11.79) Profile/MIDP-2.1 Configuration/CLDC-1.1 Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; SLCC2;.NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.2) UCBrowser8.4.0.159/70/352',
                             'cookie': 'mmp_ttl=4890bf84fabab0145001671830f121b0'})
+        elif randnum == 36: # Android 2.3
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1',
+                            'cookie': 'mmp_ttl=136711978f83c131724ca6aeb9fec3c7'})
+        elif randnum == 37: # Blackberry BB10
+            self.header = ({'User-Agent': 'Mozilla/5.0 (BB10; Touch) AppleWebKit/537.1+ (KHTML, like Gecko) Version/10.0.0.1337 Mobile Safari/537.1+',
+                            'cookie': 'mmp_ttl=3cfbccaad308b0d25fd3c5eea7317165'})
+        elif randnum == 38: # Safari Mac
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A',
+                            'cookie': 'mmp_ttl=50f1b2ef9d9529d06a4707892f9b99d7'})
+        elif randnum == 39: # Firefox Android mobile
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:46.0) Gecko/46.0 Firefox/46.0',
+                            'cookie': 'mmp_ttl=0e4eeae8996710aad548750a119268e7'})
+        elif randnum == 40: # IE11
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
+                            'cookie': 'mmp_ttl=d1273bdda01496b3e78e1194531a2585'})
+        elif randnum == 41: # Opera Mac
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36 OPR/37.0.2178.31',
+                            'cookie': 'mmp_ttl=031fbafdbacb104933041c633bb0938c'})
+        elif randnum == 42: # UC Android
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Linux; U; Android 4.4.4; en-US; XT1022 Build/KXC21.5-40) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 UCBrowser/10.7.0.636 U3/0.8.0 Mobile Safari/534.30',
+                            'cookie': 'mmp_ttl=d56f5511dd2c9d5f6aa2756f95561c0f'})
+        elif randnum == 43: # Safari iPad
+            self.header = ({'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B137 Safari/601.1',
+                            'cookie': 'mmp_ttl=2d7e61bc3538188a6aa449cfc8f44d34'})
+        elif randnum == 44: # Blackberry Playbook2.1
+            self.header = ({'User-Agent': 'Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML, like Gecko) Version/7.2.1.0 Safari/536.2+',
+                            'cookie': 'mmp_ttl=bb7111e56480678f093e9790d70fcb97'})
+        elif randnum == 45: # Blackberry 9900
+            self.header = ({'User-Agent': 'Mozilla/5.0 (BlackBerry; U; BlackBerry 9900; en-US) AppleWebKit/534.11+ (KHTML, like Gecko) Version/7.0.0.187 Mobile Safari/534.11+',
+                            'cookie': 'mmp_ttl=fe1006cc968a972289a0802e6e89d6d1'})
+        elif randnum == 46: # Chrome Android mobile
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Mobile Safari/537.36',
+                            'cookie': 'mmp_ttl=df693a5a164a6c4f6124b8a3054b7234'})
+        elif randnum == 47: # Chrome iPhone
+            self.header = ({'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1 (KHTML, like Gecko) CriOS/68.0.3440.106 Mobile/13B143 Safari/601.1.46',
+                            'cookie': 'mmp_ttl=360fa4999b516915570f3cd55acb6e9d'})
+        elif randnum == 48: # Chrome iPad
+            self.header = ({'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1 (KHTML, like Gecko) CriOS/68.0.3440.106 Mobile/13B143 Safari/601.1.46',
+                            'cookie': 'mmp_ttl=48fbbbcde08f3705b6c3ae9897ec7ac1'})
+        elif randnum == 49: # Chrome Chrome OS
+            self.header = ({'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 10066.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+                            'cookie': 'mmp_ttl=e1313f5b5c83b4b39f55923d7499765d'})
+        elif randnum == 50: # Chrome Mac
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+                            'cookie': 'mmp_ttl=f61eb84236d2e84d3fa20619c1968256'})
+        elif randnum == 51: # Chrome Windows
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+                            'cookie': 'mmp_ttl=b4125d64b0ae001c76ad6057d70f2f98'})
+        elif randnum == 52: # Firefox Android tablet
+            self.header = ({'User-Agent': 'Mozilla/5.0 (Android 4.4; Tablet; rv:46.0) Gecko/46.0 Firefox/46.0',
+                            'cookie': 'mmp_ttl=64f53cfacd910fa7d22c8cfe5f115bdc'})
         resp = requests.get(url=self.url, headers=self.header)
         for r in resp.history:
             self.redir_url = r.headers['Location']
