@@ -242,10 +242,22 @@ def addLandInfo2(state):
         if REAID == None:
             break
         url = createHouseUrl2(REAID['REA_id'])
-        land_info = LandInfo(url)
+        while True:
+            try:
+                land_info = LandInfo(url)
+                break
+            except:
+                time.sleep(5)
+                continue
         if land_info.status_code == 200:
             url = land_info.redir_url
-            land_info = LandInfo(url)
+            while True:
+            try:
+                land_info = LandInfo(url)
+                break
+            except:
+                time.sleep(5)
+                continue
             if land_info.status_code == 200:
                 land_size, floor_area, year_built = land_info.getLandInfo()
                 print(REAID['id'], land_info.getLandInfo(), url, datetime.now())
