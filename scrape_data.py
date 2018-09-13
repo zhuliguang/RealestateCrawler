@@ -146,6 +146,7 @@ def main(state, update):
                 page = page + 1
             else:
                 break
+    cursor.close()
     con.close()
     print('Mission completed!!!')
 
@@ -214,6 +215,8 @@ def addLandInfo1(state):
         elif land_info.status_code == 400:
             print('ip interrupted', land_info.header_no, datetime.now())
             break
+    select_cursor.close()
+    update_cursor.close()
     con.close()
     print('Mission completed!!!')
 
@@ -252,12 +255,12 @@ def addLandInfo2(state):
         if land_info.status_code == 200:
             url = land_info.redir_url
             while True:
-            try:
-                land_info = LandInfo(url)
-                break
-            except:
-                time.sleep(5)
-                continue
+                try:
+                    land_info = LandInfo(url)
+                    break
+                except:
+                    time.sleep(5)
+                    continue
             if land_info.status_code == 200:
                 land_size, floor_area, year_built = land_info.getLandInfo()
                 print(REAID['id'], land_info.getLandInfo(), url, datetime.now())
@@ -282,6 +285,8 @@ def addLandInfo2(state):
         elif land_info.status_code == 400:
             print('ip interrupted', land_info.header_no, datetime.now())
             break
+    select_cursor.close()
+    update_cursor.close()
     con.close()
     print('Mission completed!!!')
 
@@ -326,6 +331,8 @@ def addREAID(state):
             insert_val = (REA_id, link['id'])
             update_cursor.execute(insert_sql, insert_val)
             con.commit()
+    select_cursor.close()
+    update_cursor.close()
     con.close()
     print('Mission completed!!!')
 
@@ -349,11 +356,5 @@ def testConnection():
     print(land_info.header_no, verification_code)
 
 if __name__ == '__main__':
-    #update()
-    addLandInfo2('new_south_wales')
-    #addLandInfo2('queensland')
-    #addLandInfo2('south_australia')
-    #addLandInfo2('tasmania')
-    #addLandInfo2('victoria')
+    update()
     #addLandInfo2('western_australia')
-    #testConnection()
